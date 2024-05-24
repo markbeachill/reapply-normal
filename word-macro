@@ -1,0 +1,340 @@
+Sub AStartCustom()
+Dim objUndo As UndoRecord
+    'Declares the variable objUndo of the UndoRecord type
+    Set objUndo = Application.UndoRecord
+    'sets the object to an actual item on the undo stack
+    objUndo.StartCustomRecord ("Reformatting")
+    'Tells Word where to begin "recording" the undo record
+    'This item also lets you set the text you want to appear in the undo drop-down in word.
+    Dim aString As String
+    aString = ""
+    aString = SaveBoldAndItalic2()
+    ReapplyNormalStyleAndPreserveNumbering
+    CustomizeDocument
+    RestoreBoldAndItalic2 (aString)
+    
+       
+    objUndo.EndCustomRecord
+End Sub
+
+Private Sub CustomizeDocument()
+    ' Declare variables
+    Dim para As Paragraph
+    Dim tbl As table
+    Dim cell As cell
+    Dim styleExists As Boolean
+    Dim newStyle As Style
+    
+    ' Define new styles
+    Dim OurNewTableStyle As String
+    OurNewTableStyle = "TableStyle103"
+    
+    Dim OurNewParaStyle As String
+    OurNewParaStyle = "TableText103"
+    
+    
+    
+    
+    ' Check if the paragraph style "TableText102" exists
+    styleExists = False
+    For Each newStyle In ActiveDocument.Styles
+        If newStyle.NameLocal = OurNewParaStyle Then
+            styleExists = True
+            Exit For
+        End If
+    Next newStyle
+    
+    ' Establish OurNewParaStyle
+    If Not styleExists Then
+        Set newStyle = ActiveDocument.Styles.Add(Name:=OurNewParaStyle, Type:=wdStyleTypeParagraphOnly)
+        newStyle.BaseStyle = ActiveDocument.Styles(wdStyleBodyText).BaseStyle
+    End If
+    
+    ' Update the paragraph style "TableText102"
+    With newStyle.Font
+        .Size = 8
+    End With
+    With newStyle.ParagraphFormat
+        .LineSpacingRule = wdLineSpaceExactly
+        .LineSpacing = 12
+    End With
+    
+    ' Check if the table style "TableStyle102" exists
+    styleExists = False
+    For Each newStyle In ActiveDocument.Styles
+        If newStyle.NameLocal = OurNewTableStyle Then
+            styleExists = True
+            Exit For
+        End If
+    Next newStyle
+    
+    ' Establish OurNewTableStyle
+    If Not styleExists Then
+        Set newStyle = ActiveDocument.Styles.Add(Name:=OurNewTableStyle, Type:=wdStyleTypeTable)
+        newStyle.BaseStyle = ActiveDocument.Styles("Table Grid")
+    End If
+    
+    ' Update the table style "TableStyle102"
+    With newStyle.Font
+        .Size = 8
+    End With
+    With newStyle.ParagraphFormat
+        .LineSpacingRule = wdLineSpaceExactly
+        .LineSpacing = 12
+    End With
+    
+    ' Set table borders to light grey and thin
+    With newStyle.table.Borders
+        .OutsideColor = RGB(211, 211, 211) ' Light grey
+        .InsideColor = RGB(211, 211, 211)
+    End With
+    
+    
+    
+    ' Apply styles to all tables in the document
+    For Each tbl In ActiveDocument.Tables
+        tbl.Style = ActiveDocument.Styles(OurNewTableStyle)
+        tbl.PreferredWidthType = wdPreferredWidthPercent
+        tbl.PreferredWidth = 95
+        tbl.Rows.Alignment = wdAlignRowLeft
+        
+        ' Format the heading row
+        tbl.Rows(1).HeadingFormat = True
+        tbl.Rows(1).Shading.BackgroundPatternColor = RGB(198, 198, 198) ' Grey background for heading row
+        
+        ' Configure table settings
+        tbl.ApplyStyleFirstColumn = False
+        tbl.ApplyStyleRowBands = True
+        
+        ' Set cell padding and vertical alignment
+        For Each cell In tbl.Range.Cells
+            With cell
+                .TopPadding = 0
+                .BottomPadding = 0
+                .LeftPadding = 3
+                .RightPadding = 3
+                .VerticalAlignment = wdCellAlignVerticalTop
+                .Range.Style = ActiveDocument.Styles(OurNewParaStyle)
+            End With
+        Next cell
+        
+        ' Set spacing between cells to zero
+        tbl.Spacing = 0
+    Next tbl
+    
+    
+    ActiveDocument.Styles(OurNewParaStyle).QuickStyle = True
+    
+    
+End Sub
+
+
+
+Private Function SaveBoldAndItalic2() As String
+    Dim retString
+    retString = ""
+    For Each para In ActiveDocument.Paragraphs
+        For Each oWord In para.Range.Words
+        IsItalic = False
+            If oWord.Font.Italic = True Then
+                retString = retSttring & "I"
+                IsItalic = True
+            End If
+            If oWord.Font.Bold = True Then
+                If IsItalic = True Then
+                    retString = retSttring & "I"
+                Else
+                    retString = retSttring & "X"
+                End If
+            End If
+        Next oWord
+        Next para
+End Function
+
+
+Private Sub SaveBoldAndItalic()
+    For Each para In ActiveDocument.Paragraphs
+        For Each oWord In para.Range.Words
+        IsItalic = False
+            If oWord.Font.Italic = True Then
+                oWord.HighlightColorIndex = wdYellow
+                IsItalic = True
+            End If
+            If oWord.Font.Bold = True Then
+                If IsItalic = True Then
+                oWord.HighlightColorIndex = wdPink
+                Else
+                oWord.HighlightColorIndex = wdGreen
+                End If
+            End If
+        Next oWord
+        Next para
+End Sub
+
+
+Private Sub RestoreBoldAndItalic()
+    For Each para In ActiveDocument.Paragraphs
+        For Each oWord In para.Range.Words
+            If oWord.HighlightColorIndex = wdYellow Then
+                oWord.Font.Italic = True
+                oWord.HighlightColorIndex = wdAuto
+            Else
+             If oWord.HighlightColorIndex = wdGreen Then
+                oWord.Font.Bold = True
+                oWord.HighlightColorIndex = wdAuto
+            Else
+             
+            
+             If oWord.HighlightColorIndex = wdPink Then
+                oWord.Font.Bold = True
+                oWord.Font.Italic = True
+                oWord.HighlightColorIndex = wdAuto
+            End If
+            End If
+            End If
+        Next oWord
+        Next para
+End Sub
+
+Private Sub RestoreBoldAndItalic2(aString As String)
+    Dim n As Integer
+    Dim tmp As String
+    n = 1
+    For Each para In ActiveDocument.Paragraphs
+        For Each oWord In para.Range.Words
+            tmp = Mid(aString, n, 1)
+            If tmp = "B" Or tmp = "X" Then
+                oWord.Font.Bold = True
+            End If
+            If tmp = "I" Or tmp = "X" Then
+                oWord.Font.Italic = True
+            End If
+        Next oWord
+        Next para
+End Sub
+
+
+
+
+
+
+
+Private Sub ReapplyNormalStyleAndPreserveNumbering()
+    Dim para As Paragraph
+    Dim originalListType As WdListType
+    Dim originalListTemplate As ListTemplate
+    Dim TheNormal As String
+    TheNormal = wdStyleNormal
+    TheNormal = "Normal"
+    Dim IsItalic
+    IsItalic = False
+    
+    ' Loop through all paragraphs in the document
+    For Each para In ActiveDocument.Paragraphs
+        ' Store the original list type and list template of the paragraph
+        originalListType = para.Range.ListFormat.ListType
+        Set originalListTemplate = para.Range.ListFormat.ListTemplate
+        
+        ' Reapply styles based on outline level
+        If para.OutlineLevel = wdOutlineLevel3 Then
+            para.Style = ActiveDocument.Styles(TheNormal)
+            para.Style = ActiveDocument.Styles(wdStyleHeading3)
+        ElseIf para.OutlineLevel = wdOutlineLevel4 Then
+            para.Style = ActiveDocument.Styles(TheNormal)
+            para.Style = ActiveDocument.Styles(wdStyleHeading4)
+        Else
+        
+
+        para.Style = ActiveDocument.Styles(TheNormal)
+              
+        
+           ' para.Style = ActiveDocument.Styles(TheNormal)
+        End If
+        
+        ' Restore the original list type and list template to preserve numbering or bullets
+        If originalListType <> wdListNoNumbering Then
+            para.Range.ListFormat.ApplyListTemplateWithLevel ListTemplate:=originalListTemplate, _
+                ContinuePreviousList:=True, _
+                ApplyTo:=wdListApplyToWholeList, _
+                DefaultListBehavior:=wdWord10ListBehavior
+        End If
+    Next para
+End Sub
+
+
+
+
+Private Sub ReapplyNormalStyleAndPreserveNumbering222222222222()
+    Dim para As Paragraph
+    Dim originalListType As WdListType
+    Dim originalListTemplate As ListTemplate
+    Dim TheNormal As String
+    TheNormal = wdStyleNormal
+    TheNormal = "Normal"
+    Dim IsItalic
+    IsItalic = False
+    
+    ' Loop through all paragraphs in the document
+    For Each para In ActiveDocument.Paragraphs
+        ' Store the original list type and list template of the paragraph
+        originalListType = para.Range.ListFormat.ListType
+        Set originalListTemplate = para.Range.ListFormat.ListTemplate
+        
+        ' Reapply styles based on outline level
+        If para.OutlineLevel = wdOutlineLevel3 Then
+            para.Style = ActiveDocument.Styles(TheNormal)
+            para.Style = ActiveDocument.Styles(wdStyleHeading3)
+        ElseIf para.OutlineLevel = wdOutlineLevel4 Then
+            para.Style = ActiveDocument.Styles(TheNormal)
+            para.Style = ActiveDocument.Styles(wdStyleHeading4)
+        Else
+        
+
+        For Each oWord In para.Range.Words
+        IsItalic = False
+            If oWord.Font.Italic = True Then
+                oWord.HighlightColorIndex = wdYellow
+                IsItalic = True
+            End If
+            If oWord.Font.Bold = True Then
+                If IsItalic = True Then
+                oWord.HighlightColorIndex = wdPink
+                Else
+                oWord.HighlightColorIndex = wdGreen
+                End If
+            End If
+        Next oWord
+        
+        
+        
+        For Each oWord In para.Range.Words
+            If oWord.HighlightColorIndex = wdYellow Then
+                oWord.Font.Italic = True
+                oWord.HighlightColorIndex = wdAuto
+            End If
+            If oWord.HighlightColorIndex = wdGreen Then
+                oWord.Font.Bold = True
+                oWord.HighlightColorIndex = wdAuto
+            End If
+            If oWord.HighlightColorIndex = wdPink Then
+                oWord.Font.Italic = True
+                oWord.Font.Bold = True
+                oWord.HighlightColorIndex = wdAuto
+            End If
+           
+        Next oWord
+        
+        End If
+        
+        ' Restore the original list type and list template to preserve numbering or bullets
+        If originalListType <> wdListNoNumbering Then
+            para.Range.ListFormat.ApplyListTemplateWithLevel ListTemplate:=originalListTemplate, _
+                ContinuePreviousList:=True, _
+                ApplyTo:=wdListApplyToWholeList, _
+                DefaultListBehavior:=wdWord10ListBehavior
+        End If
+    Next para
+End Sub
+
+
+
