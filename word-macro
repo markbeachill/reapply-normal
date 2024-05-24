@@ -9,7 +9,7 @@ Sub ApplyFormatting()
     'This item also lets you set the text you want to appear in the undo drop-down in word.
     Dim strInfoOnFormatting As String
     
-    ' Create a string with info on bold and italics
+    ' Create a string with info on bold and italics (at individual word level)
     strInfoOnFormatting = SaveBoldAndItalic()
     
     ' Reapply normal formatting taking care to preserve bullet points and numbering
@@ -42,7 +42,7 @@ Sub ReapplyNormal()
     'This item also lets you set the text you want to appear in the undo drop-down in word.
     Dim strInfoOnFormatting As String
     
-    ' Create a string with info on bold and italics
+    ' Create a string with info on bold and italics (at individual word level)
     strInfoOnFormatting = SaveBoldAndItalic()
     
     ' Reapply normal formatting taking care to preserve bullet points and numbering
@@ -52,6 +52,7 @@ Sub ReapplyNormal()
     RestoreBoldAndItalic (strInfoOnFormatting)
     objUndo.EndCustomRecord
 End Sub
+
 
 
 
@@ -168,24 +169,29 @@ End Sub
 
 
 Private Function SaveBoldAndItalic() As String
-    Dim retString
+    Dim retString As String
     retString = ""
+    Dim FormatCode As String
     For Each para In ActiveDocument.Paragraphs
         For Each oWord In para.Range.Words
+        FormatCode = " "
         IsItalic = False
             If oWord.Font.Italic = True Then
-                retString = retSttring & "I"
-                IsItalic = True
+                FormatCode = "I"
             End If
             If oWord.Font.Bold = True Then
                 If IsItalic = True Then
-                    retString = retSttring & "I"
+                    FormatCode = "X"
                 Else
-                    retString = retSttring & "X"
+                    FormatCode = "B"
                 End If
             End If
+            retString = retString & FormatCode
         Next oWord
         Next para
+        
+        SaveBoldAndItalic = retString
+        
 End Function
 
 
@@ -193,6 +199,7 @@ End Function
 Private Sub RestoreBoldAndItalic(aString As String)
     Dim n As Integer
     Dim tmp As String
+    tmp = aString
     n = 1
     For Each para In ActiveDocument.Paragraphs
         For Each oWord In para.Range.Words
@@ -203,6 +210,7 @@ Private Sub RestoreBoldAndItalic(aString As String)
             If tmp = "I" Or tmp = "X" Then
                 oWord.Font.Italic = True
             End If
+            n = n + 1
         Next oWord
         Next para
 End Sub
@@ -250,6 +258,7 @@ Private Sub ReapplyNormalStyleAndPreserveNumbering()
         End If
     Next para
 End Sub
+
 
 
 
