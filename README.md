@@ -1,16 +1,19 @@
 This is a macro for Microsoft Word. 
 
 This was created to format text from ChatGPT to Word (I am  creating materials for students.).
-Basically A) paste code from ChatGPT to Dilligner or similar Markdown editor - I like PanWriter
-B) Copy preview to Word. (This preview has Normal style applied but it needs reapplying. Reapplying style on WOrd is a "crap shoot".)
-C) Apply the formatting here
+Its core is updating the formatting to match the styles for Normal, i.e. reapplying the Normal style
 
-BUT the code also helps when you have to reapply the style without formatting such as bold and titalics and numbering being removed.
+Basically 
+A) paste the copied text from ChatGPT into Dilligner or similar Markdown editor - I like PanWriter
+B) Paste preview from editor into Word.
+C) Run the macro in Word to make it look nice
 
-There is a ReapplyNormal function which reapplies normal but preserves: 
+The code also helps when having to fix a document where you need to reapply the style and preserve formatting such as bold and italics and numbering.
+
+There is a ReapplyNormal function which reapplies the Normal style formatting but preserves: 
 - list numbering
 - bullet points
-- bold and italics at an individual level
+- bold and italics at an individual word level
 
 There is an ApplyFormattng which:
 
@@ -19,6 +22,8 @@ There is an ApplyFormattng which:
 - Creates a new table text style
 - Applies the new table style to all tables
 - Applies the new table text  to all text in tables
+
+It includes some optimisation - but this is still not an instant macro - so a bit of patience needed.
 
 Hope this is useful
 
