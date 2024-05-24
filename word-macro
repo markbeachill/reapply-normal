@@ -1,23 +1,62 @@
-Sub AStartCustom()
-Dim objUndo As UndoRecord
+Sub ApplyFormatting()
+    ' Single undo point
+    Dim objUndo As UndoRecord
     'Declares the variable objUndo of the UndoRecord type
     Set objUndo = Application.UndoRecord
     'sets the object to an actual item on the undo stack
     objUndo.StartCustomRecord ("Reformatting")
     'Tells Word where to begin "recording" the undo record
     'This item also lets you set the text you want to appear in the undo drop-down in word.
-    Dim aString As String
-    aString = ""
-    aString = SaveBoldAndItalic2()
-    ReapplyNormalStyleAndPreserveNumbering
-    CustomizeDocument
-    RestoreBoldAndItalic2 (aString)
+    Dim strInfoOnFormatting As String
     
-       
+    ' Create a string with info on bold and italics
+    strInfoOnFormatting = SaveBoldAndItalic()
+    
+    ' Reapply normal formatting taking care to preserve bullet points and numbering
+    ReapplyNormalStyleAndPreserveNumbering
+        
+    
+    ' Create new table styles and apply a "table text" paragraph style
+    Dim NewTableStyle As String
+    NewTableStyle = "TableStyle103"
+    Dim NewTableTextStyle As String
+    NewTableTextStyle = "TableText103"
+    
+    Call ApplyFormattingAndReapplyNormal(NewTableStyle, NewTableTextStyle)
+        
+    ' restore all bold and italics to document
+    RestoreBoldAndItalic (strInfoOnFormatting)
     objUndo.EndCustomRecord
 End Sub
 
-Private Sub CustomizeDocument()
+
+
+Sub ReapplyNormal()
+    ' Single undo point
+    Dim objUndo As UndoRecord
+    'Declares the variable objUndo of the UndoRecord type
+    Set objUndo = Application.UndoRecord
+    'sets the object to an actual item on the undo stack
+    objUndo.StartCustomRecord ("Reformatting")
+    'Tells Word where to begin "recording" the undo record
+    'This item also lets you set the text you want to appear in the undo drop-down in word.
+    Dim strInfoOnFormatting As String
+    
+    ' Create a string with info on bold and italics
+    strInfoOnFormatting = SaveBoldAndItalic()
+    
+    ' Reapply normal formatting taking care to preserve bullet points and numbering
+    ReapplyNormalStyleAndPreserveNumbering
+        
+    ' restore all bold and italics to document
+    RestoreBoldAndItalic (strInfoOnFormatting)
+    objUndo.EndCustomRecord
+End Sub
+
+
+
+
+Sub ApplyFormattingAndReapplyNormal(NewTableStyleName As String, NewTableTextStyleName As String)
     ' Declare variables
     Dim para As Paragraph
     Dim tbl As table
@@ -27,12 +66,10 @@ Private Sub CustomizeDocument()
     
     ' Define new styles
     Dim OurNewTableStyle As String
-    OurNewTableStyle = "TableStyle103"
+    OurNewTableStyle = NewTableStyleName
     
     Dim OurNewParaStyle As String
-    OurNewParaStyle = "TableText103"
-    
-    
+    OurNewParaStyle = NewTableTextStyleName
     
     
     ' Check if the paragraph style "TableText102" exists
@@ -130,7 +167,7 @@ End Sub
 
 
 
-Private Function SaveBoldAndItalic2() As String
+Private Function SaveBoldAndItalic() As String
     Dim retString
     retString = ""
     For Each para In ActiveDocument.Paragraphs
@@ -152,51 +189,8 @@ Private Function SaveBoldAndItalic2() As String
 End Function
 
 
-Private Sub SaveBoldAndItalic()
-    For Each para In ActiveDocument.Paragraphs
-        For Each oWord In para.Range.Words
-        IsItalic = False
-            If oWord.Font.Italic = True Then
-                oWord.HighlightColorIndex = wdYellow
-                IsItalic = True
-            End If
-            If oWord.Font.Bold = True Then
-                If IsItalic = True Then
-                oWord.HighlightColorIndex = wdPink
-                Else
-                oWord.HighlightColorIndex = wdGreen
-                End If
-            End If
-        Next oWord
-        Next para
-End Sub
 
-
-Private Sub RestoreBoldAndItalic()
-    For Each para In ActiveDocument.Paragraphs
-        For Each oWord In para.Range.Words
-            If oWord.HighlightColorIndex = wdYellow Then
-                oWord.Font.Italic = True
-                oWord.HighlightColorIndex = wdAuto
-            Else
-             If oWord.HighlightColorIndex = wdGreen Then
-                oWord.Font.Bold = True
-                oWord.HighlightColorIndex = wdAuto
-            Else
-             
-            
-             If oWord.HighlightColorIndex = wdPink Then
-                oWord.Font.Bold = True
-                oWord.Font.Italic = True
-                oWord.HighlightColorIndex = wdAuto
-            End If
-            End If
-            End If
-        Next oWord
-        Next para
-End Sub
-
-Private Sub RestoreBoldAndItalic2(aString As String)
+Private Sub RestoreBoldAndItalic(aString As String)
     Dim n As Integer
     Dim tmp As String
     n = 1
@@ -212,10 +206,6 @@ Private Sub RestoreBoldAndItalic2(aString As String)
         Next oWord
         Next para
 End Sub
-
-
-
-
 
 
 
@@ -249,81 +239,6 @@ Private Sub ReapplyNormalStyleAndPreserveNumbering()
               
         
            ' para.Style = ActiveDocument.Styles(TheNormal)
-        End If
-        
-        ' Restore the original list type and list template to preserve numbering or bullets
-        If originalListType <> wdListNoNumbering Then
-            para.Range.ListFormat.ApplyListTemplateWithLevel ListTemplate:=originalListTemplate, _
-                ContinuePreviousList:=True, _
-                ApplyTo:=wdListApplyToWholeList, _
-                DefaultListBehavior:=wdWord10ListBehavior
-        End If
-    Next para
-End Sub
-
-
-
-
-Private Sub ReapplyNormalStyleAndPreserveNumbering222222222222()
-    Dim para As Paragraph
-    Dim originalListType As WdListType
-    Dim originalListTemplate As ListTemplate
-    Dim TheNormal As String
-    TheNormal = wdStyleNormal
-    TheNormal = "Normal"
-    Dim IsItalic
-    IsItalic = False
-    
-    ' Loop through all paragraphs in the document
-    For Each para In ActiveDocument.Paragraphs
-        ' Store the original list type and list template of the paragraph
-        originalListType = para.Range.ListFormat.ListType
-        Set originalListTemplate = para.Range.ListFormat.ListTemplate
-        
-        ' Reapply styles based on outline level
-        If para.OutlineLevel = wdOutlineLevel3 Then
-            para.Style = ActiveDocument.Styles(TheNormal)
-            para.Style = ActiveDocument.Styles(wdStyleHeading3)
-        ElseIf para.OutlineLevel = wdOutlineLevel4 Then
-            para.Style = ActiveDocument.Styles(TheNormal)
-            para.Style = ActiveDocument.Styles(wdStyleHeading4)
-        Else
-        
-
-        For Each oWord In para.Range.Words
-        IsItalic = False
-            If oWord.Font.Italic = True Then
-                oWord.HighlightColorIndex = wdYellow
-                IsItalic = True
-            End If
-            If oWord.Font.Bold = True Then
-                If IsItalic = True Then
-                oWord.HighlightColorIndex = wdPink
-                Else
-                oWord.HighlightColorIndex = wdGreen
-                End If
-            End If
-        Next oWord
-        
-        
-        
-        For Each oWord In para.Range.Words
-            If oWord.HighlightColorIndex = wdYellow Then
-                oWord.Font.Italic = True
-                oWord.HighlightColorIndex = wdAuto
-            End If
-            If oWord.HighlightColorIndex = wdGreen Then
-                oWord.Font.Bold = True
-                oWord.HighlightColorIndex = wdAuto
-            End If
-            If oWord.HighlightColorIndex = wdPink Then
-                oWord.Font.Italic = True
-                oWord.Font.Bold = True
-                oWord.HighlightColorIndex = wdAuto
-            End If
-           
-        Next oWord
-        
         End If
         
         ' Restore the original list type and list template to preserve numbering or bullets
