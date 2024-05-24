@@ -230,6 +230,11 @@ Private Sub ReapplyNormalStyleAndPreserveNumbering()
     ' Loop through all paragraphs in the document
     For Each para In ActiveDocument.Paragraphs
         ' Store the original list type and list template of the paragraph
+        
+If para.Style = ActiveDocument.Styles(TheNormal) Then
+
+        
+        
         originalListType = para.Range.ListFormat.ListType
         Set originalListTemplate = para.Range.ListFormat.ListTemplate
         
@@ -256,6 +261,9 @@ Private Sub ReapplyNormalStyleAndPreserveNumbering()
                 ApplyTo:=wdListApplyToWholeList, _
                 DefaultListBehavior:=wdWord10ListBehavior
         End If
+        
+        
+End If
     Next para
 End Sub
 
