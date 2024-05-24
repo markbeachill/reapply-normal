@@ -25,5 +25,6 @@ There is an ApplyFormattng which:
 
 It includes some optimisation - but this is still not an instant macro - so a bit of patience needed.
 
-Hope this is useful
+Hope this is useful - let me know if it is.
 
+This is  public domain.
