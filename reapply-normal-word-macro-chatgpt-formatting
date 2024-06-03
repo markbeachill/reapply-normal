@@ -231,7 +231,10 @@ Private Sub ReapplyNormalStyleAndPreserveNumbering()
     For Each para In ActiveDocument.Paragraphs
         ' Store the original list type and list template of the paragraph
         
-If para.Style = ActiveDocument.Styles(TheNormal) Then
+        
+        ' if the style is blank trhen reset also [change]
+        
+If para.Style = ActiveDocument.Styles(TheNormal) Or para.Style = "" Then
 
         
         
